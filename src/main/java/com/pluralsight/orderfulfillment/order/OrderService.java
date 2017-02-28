@@ -4,15 +4,15 @@ import java.util.*;
 
 /**
  * Interface for order functionality
- * 
+ *
  * @author Michael Hoffman, Pluralsight
- * 
+ *
  */
 public interface OrderService {
 
    /**
     * Returns the details of the order without the order items.
-    * 
+    *
     * @return List<Order>
     */
    List<Order> getOrderDetails();
@@ -20,7 +20,7 @@ public interface OrderService {
    /**
     * Returns the order details of the order without the order item for the
     * status passed. The result size is limited based on the fetch size passed.
-    * 
+    *
     * @param OrderStatus
     *           orderStatus
     * @param int fetchSize
@@ -36,7 +36,7 @@ public interface OrderService {
    /**
     * Updates the order status of one or more orders. Also will update the list
     * of orders passed to match the status passed.
-    * 
+    *
     * @param orders
     * @param orderStatus
     */
@@ -45,10 +45,20 @@ public interface OrderService {
 
    /**
     * Retrieves the order items for an order.
-    * 
+    *
     * @param id
     * @return List<OrderItem>
     */
    List<OrderItem> getOrderItems(long id);
+
+   /**
+    * Retrieves the database data for an order based on the order ID passed.
+    * Transforms the database order into XML format for an Order type.
+    *
+    * @param id
+    * @return
+    * @throws Exception
+    */
+   String processCreateOrderMessage(Long orderId) throws Exception;
 
 }

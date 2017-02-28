@@ -35,7 +35,8 @@ public class IntegrationConfig extends CamelConfiguration {
 			public void configure() throws Exception {
 				from("sql:select id from orders.\"order\" where status = '" + OrderStatus.NEW.getCode()
 						+ "'?consumer.onConsume=update orders.\"order\" set status = '" + OrderStatus.PROCESSING.getCode()
-						+ "' where id = :#id").to("log:com.pluralsight.orderfulfillment.order?level=INFO");
+						+ "' where id = :#id").bean("orderItemMessageTranslator","transformToOrderItemMessage").
+				to("log:com.pluralsight.orderfulfillment.order?level=INFO");
 
 			}
 		};

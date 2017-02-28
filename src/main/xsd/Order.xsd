@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schema xmlns="http://www.w3.org/2001/XMLSchema" targetNamespace="http://www.pluralsight.com/orderfulfillment/Order" xmlns:tns="http://www.pluralsight.com/orderfulfillment/Order"
+	elementFormDefault="qualified">
+
+	<element name="Order">
+		<complexType>
+			<sequence>
+				<element name="OrderType" type="tns:OrderType" minOccurs="1" maxOccurs="1" />
+			</sequence>
+		</complexType>
+	</element>
+
+	<complexType name="OrderType">
+		<sequence>
+			<element name="FirstName" type="string" minOccurs="1" maxOccurs="1" />
+			<element name="LastName" type="string" minOccurs="1" maxOccurs="1" />
+			<element name="Email" type="string" minOccurs="1" maxOccurs="1" />
+			<element name="OrderNumber" type="string" minOccurs="1" maxOccurs="1" />
+			<element name="TimeOrderPlaced" type="dateTime" minOccurs="1" maxOccurs="1" />
+			<element name="FulfillmentCenter" type="tns:FulfillmentCenter" minOccurs="1" maxOccurs="1" />
+			<element name="OrderItems" type="tns:OrderItemType" minOccurs="1" maxOccurs="unbounded" />
+		</sequence>
+	</complexType>
+
+	<complexType name="OrderItemType">
+		<sequence>
+			<element name="ItemNumber" type="string" minOccurs="1" maxOccurs="1" />
+			<element name="Price" type="decimal" minOccurs="1" maxOccurs="1" />
+			<element name="Quantity" type="int" minOccurs="1" maxOccurs="1" />
+		</sequence>
+
+	</complexType>
+
+	<simpleType name="FulfillmentCenter">
+		<restriction base="string">
+			<enumeration value="FulfillmentCenterOne"></enumeration>
+			<enumeration value="ABCFulfillmentCenter"></enumeration>
+		</restriction>
+	</simpleType>
+
+</schema>
