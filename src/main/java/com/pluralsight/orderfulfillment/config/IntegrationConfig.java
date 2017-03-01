@@ -99,18 +99,36 @@ public class IntegrationConfig extends CamelConfiguration {
 						"http://www.pluralsight.com/orderfulfillment/Order");
 				// Send from the ORDER_ITEM_PROCESSING queue to the correct
 				// fulfillment center queue.
-				from("activemq:queue:ORDER_ITEM_PROCESSING")
-						.choice()
-						.when()
+				from("activemq:queue:ORDER_ITEM_PROCESSING").choice().when()
 						.xpath("/o:Order/o:OrderType/o:FulfillmentCenter = '"
 								+ com.pluralsight.orderfulfillment.generated.FulfillmentCenter.ABC_FULFILLMENT_CENTER.value() + "'",
 								namespace)
-						.to("activemq:queue:ABC_FULFILLMENT_REQUEST")
-						.when()
+						.to("activemq:queue:ABC_FULFILLMENT_REQUEST").when()
 						.xpath("/o:Order/o:OrderType/o:FulfillmentCenter = '"
 								+ com.pluralsight.orderfulfillment.generated.FulfillmentCenter.FULFILLMENT_CENTER_ONE.value() + "'",
 								namespace)
 						.to("activemq:queue:FC1_FULFILLMENT_REQUEST").otherwise().to("activemq:queue:ERROR_FULFILLMENT_REQUEST");
+			}
+		};
+	}
+
+	/**
+	 * Route builder to implement production to a RESTful web service. This route will first consume a message from the
+	 * FC1_FULFILLMENT_REQUEST ActiveMQ queue. The message body will be an order in XML format. The message will then be passed to the
+	 * fulfillment center one processor where it will be transformed from the XML to JSON format. Next, the message header content type will
+	 * be set as JSON format and a message will be posted to the fulfillment center one RESTful web service. If the response is success, the
+	 * route will be complete. If not, the route will error out.
+	 *
+	 * @return
+	 */
+	@Bean
+	public org.apache.camel.builder.RouteBuilder fulfillmentCenterOneRouter() {
+		return new org.apache.camel.builder.RouteBuilder() {
+			@Override
+			public void configure() throws Exception {
+				from("activemq:queue:FC1_FULFILLMENT_REQUEST").beanRef("fulfillmentCenterOneProcessor", "transformToOrderRequestMessage")
+						.setHeader(org.apache.camel.Exchange.CONTENT_TYPE, constant("application/json"))
+						.to("http4://localhost:8090/services/orderFulfillment/processOrders");
 			}
 		};
 	}
