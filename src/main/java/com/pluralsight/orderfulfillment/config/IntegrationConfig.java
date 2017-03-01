@@ -1,9 +1,14 @@
 package com.pluralsight.orderfulfillment.config;
 
 import javax.inject.Inject;
+import javax.jms.ConnectionFactory;
 import javax.sql.DataSource;
 
+import org.apache.activemq.ActiveMQConnectionFactory;
+import org.apache.activemq.camel.component.ActiveMQComponent;
+import org.apache.activemq.jms.pool.PooledConnectionFactory;
 import org.apache.camel.builder.RouteBuilder;
+import org.apache.camel.component.jms.JmsConfiguration;
 import org.apache.camel.component.sql.SqlComponent;
 import org.apache.camel.spring.javaconfig.CamelConfiguration;
 import org.springframework.context.annotation.Bean;
@@ -21,6 +26,33 @@ public class IntegrationConfig extends CamelConfiguration {
 	private DataSource dataSource;
 
 	@Bean
+	public ConnectionFactory jmsConnectionFactory() {
+		return new ActiveMQConnectionFactory(environment.getProperty("activemq.broker.url"));
+	}
+
+	@Bean(initMethod = "start", destroyMethod = "stop")
+	public PooledConnectionFactory pooledConnectionFactory() {
+		PooledConnectionFactory factory = new PooledConnectionFactory();
+		factory.setConnectionFactory(jmsConnectionFactory());
+		factory.setMaxConnections(Integer.parseInt(environment.getProperty("pooledConnectionFactory.maxConnections")));
+		return factory;
+	}
+
+	@Bean
+	public JmsConfiguration jmsConfiguration() {
+		JmsConfiguration jmsConfiguration = new JmsConfiguration();
+		jmsConfiguration.setConnectionFactory(pooledConnectionFactory());
+		return jmsConfiguration;
+	}
+
+	@Bean
+	public ActiveMQComponent activeMq() {
+		ActiveMQComponent activeMQComponent = new ActiveMQComponent();
+		activeMQComponent.setConfiguration(jmsConfiguration());
+		return activeMQComponent;
+	}
+
+	@Bean
 	public SqlComponent sql() {
 		SqlComponent sqlComponent = new SqlComponent();
 		sqlComponent.setDataSource(dataSource);
@@ -35,8 +67,8 @@ public class IntegrationConfig extends CamelConfiguration {
 			public void configure() throws Exception {
 				from("sql:select id from orders.\"order\" where status = '" + OrderStatus.NEW.getCode()
 						+ "'?consumer.onConsume=update orders.\"order\" set status = '" + OrderStatus.PROCESSING.getCode()
-						+ "' where id = :#id").bean("orderItemMessageTranslator","transformToOrderItemMessage").
-				to("log:com.pluralsight.orderfulfillment.order?level=INFO");
+						+ "' where id = :#id").bean("orderItemMessageTranslator", "transformToOrderItemMessage")
+								.to("activemq:queue:ORDER_ITEM_PROCESSING");
 
 			}
 		};
